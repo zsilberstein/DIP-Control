@@ -2,7 +2,7 @@
 Dynamical simulation and control of the unstable double inverted pendulum (DIP) on a cart.
 ## To Do
 - [x] Init Repo
-- [ ] Setup Raylib and CMake
+- [x] Setup Raylib and CMake
 - [ ] Make basic GUI for inputs
 - [ ] Derive equations of motion
 - [ ] Make cart in GUI with parameters
