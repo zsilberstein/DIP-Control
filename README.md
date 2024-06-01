@@ -3,7 +3,7 @@ Dynamical simulation and control of the unstable double inverted pendulum (DIP) 
 ## To Do
 - [x] Init Repo
 - [x] Setup Raylib and CMake
-- [ ] Make basic GUI for inputs
+- [x] Make basic GUI for inputs
 - [ ] Derive equations of motion
 - [ ] Make cart in GUI with parameters
 - [ ] Implement dynamics (class for DIP)
