@@ -12,7 +12,8 @@ Dynamical simulation and control of the unstable double inverted pendulum (DIP) 
 
 
 ## Dependencies
-- [Raylib](https://www.raylib.com/index.html)
+- [raylib](https://www.raylib.com/index.html)
+- [raygui](https://github.com/raysan5/raygui)
 - [Eigen](http://eigen.tuxfamily.org/)
 
 
