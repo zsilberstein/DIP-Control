@@ -1,6 +1,7 @@
 import sympy as sp
 
 sp.init_printing()
+
 # System constants and time
 mc, m1, m2, L1, L2, g, Dc, D1, D2, dt, t = sp.symbols(
     'mc m1 m2 L1 L2 g Dc D1 D2 dt t', positive=True)
@@ -69,15 +70,14 @@ massTwo_EOM = massTwo_EOM.subs([(x_d_d, v_dot), (th1_d_d, omega1_dot), (th2_d_d,
                                 (x_d, v), (th1_d, omega1), (th2_d, omega2), (x_d, v),
                                 (th1t, th1), (th2t, th2)])
 # Print EOMs
-print('Cart EOM')
+print('Cart EOM:')
 print(sp.pretty(cart_EOM))
 print()
-print('Mass One EOM')
+print('Mass One EOM:')
 print(sp.pretty(massOne_EOM))
 print()
-print('Mass Two EOM')
+print('Mass Two EOM:')
 print(sp.pretty(massTwo_EOM))
-print()
 
 # Collect like terms to simplify building matrices
 cartEOM_dict = sp.collect(cart_EOM.expand(),
@@ -119,7 +119,7 @@ X_dot = sp.Matrix([v_dot, omega1_dot, omega2_dot])
 
 system = M*X_dot - C - G*g + D - U
 
-# Confirm that matrix representation is equivalent to what was found earlier
+# Confirm that matrix representation is equivalent to EOMs found earlier
 if not sp.simplify(cart_EOM - system[0]) == 0:
     print('Warning: Difference found in matrix representation')
 if not sp.simplify(massOne_EOM - system[1]) == 0:
@@ -128,6 +128,8 @@ if not sp.simplify(massTwo_EOM - system[2]) == 0:
     print('Warning: Difference found in matrix representation')
 
 # Print matrices
+print()
+print('-' * 150)
 print()
 print('Matrix representation of equations of motion: MẊ - C - G*g + D - U = 0')
 print()
@@ -145,3 +147,22 @@ print(sp.pretty(D))
 print()
 print('U matrix:')
 print(sp.pretty(U))
+
+# Calculate linearized state space matrices A and B such that Ẋ = AX + BU at the equilibrium point.
+M_inv = M.adjugate() / M.det()
+X_Dot = sp.Matrix([v, omega1, omega2, M_inv * (G*g + C - D + U)])
+
+A = sp.simplify(X_Dot.jacobian([x, th1, th2, v, omega1, omega2]).subs(
+    [(th1, 0), (th2, 0), (omega1, 0), (omega2, 0), (v, 0)]))
+
+B = sp.simplify(X_Dot.jacobian([u]).subs(
+    [(th1, 0), (th2, 0), (omega1, 0), (omega2, 0), (v, 0)]))
+print()
+print('-' * 150)
+print()
+print('Linearized state-space representation: Ẋ = AX + BU')
+print('A matrix:')
+print(sp.pretty(A))
+print()
+print(f'B matrix:')
+print(sp.pretty(B))
