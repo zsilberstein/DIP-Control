@@ -68,7 +68,7 @@ massOne_EOM = massOne_EOM.subs([(x_d_d, v_dot), (th1_d_d, omega1_dot), (th2_d_d,
 massTwo_EOM = massTwo_EOM.subs([(x_d_d, v_dot), (th1_d_d, omega1_dot), (th2_d_d, omega2_dot),
                                 (x_d, v), (th1_d, omega1), (th2_d, omega2), (x_d, v),
                                 (th1t, th1), (th2t, th2)])
-
+# Print EOMs
 print('Cart EOM')
 print(sp.pretty(cart_EOM))
 print()
@@ -78,3 +78,70 @@ print()
 print('Mass Two EOM')
 print(sp.pretty(massTwo_EOM))
 print()
+
+# Collect like terms to simplify building matrices
+cartEOM_dict = sp.collect(cart_EOM.expand(),
+                          [v_dot, omega1_dot, omega2_dot, g, Dc, u],
+                          evaluate=False)
+Mass1EOM_dict = sp.collect(massOne_EOM.expand(),
+                           [v_dot, omega1_dot, omega2_dot, g, D1, u],
+                           evaluate=False)
+Mass2EOM_dict = sp.collect(massTwo_EOM.expand(),
+                           [v_dot, omega1_dot, omega2_dot, g, D2, u],
+                           evaluate=False)
+
+# Build EOMs into matrix form as MẊ - C - G + D - U = 0
+M = sp.Matrix([[cartEOM_dict[v_dot],
+                sp.collect(cartEOM_dict[omega1_dot], L1*sp.cos(th1)),
+                cartEOM_dict[omega2_dot]],
+               [sp.collect(Mass1EOM_dict[v_dot], L1*sp.cos(th1)),
+                sp.collect(Mass1EOM_dict[omega1_dot], L1*L1),
+                sp.collect(Mass1EOM_dict[omega2_dot], m2*L2)],
+               [Mass2EOM_dict[v_dot],
+                sp.collect(Mass2EOM_dict[omega1_dot], L2*m2),
+                Mass2EOM_dict[omega2_dot]]])
+
+C = sp.Matrix([sp.collect(-cartEOM_dict[1], [m1, m2]),
+               sp.collect(-Mass1EOM_dict[1], m2),
+               sp.collect(-Mass2EOM_dict[1], m2)])
+
+G = sp.Matrix([0,
+               sp.collect(-Mass1EOM_dict[g], L1*sp.sin(th1)),
+               -Mass2EOM_dict[g]])
+
+D = sp.Matrix([Dc*cartEOM_dict[Dc],
+               D1*Mass1EOM_dict[D1],
+               D2*Mass2EOM_dict[D2]])
+
+U = sp.Matrix([-u*cartEOM_dict[u], 0, 0])
+
+X_dot = sp.Matrix([v_dot, omega1_dot, omega2_dot])
+
+system = M*X_dot - C - G*g + D - U
+
+# Confirm that matrix representation is equivalent to what was found earlier
+if not sp.simplify(cart_EOM - system[0]) == 0:
+    print('Warning: Difference found in matrix representation')
+if not sp.simplify(massOne_EOM - system[1]) == 0:
+    print('Warning: Difference found in matrix representation')
+if not sp.simplify(massTwo_EOM - system[2]) == 0:
+    print('Warning: Difference found in matrix representation')
+
+# Print matrices
+print()
+print('Matrix representation of equations of motion: MẊ - C - G*g + D - U = 0')
+print()
+print('M matrix:')
+print(sp.pretty(M))
+print()
+print('C matrix:')
+print(sp.pretty(C))
+print()
+print('G matrix:')
+print(sp.pretty(G))
+print()
+print('D matrix:')
+print(sp.pretty(D))
+print()
+print('U matrix:')
+print(sp.pretty(U))
