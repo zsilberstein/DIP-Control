@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 project(DIP-Control)
+set (CMAKE_CXX_STANDARD 20)
 
 # Generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -25,7 +26,7 @@ endif()
 
 
 # Our Project
-add_executable(${PROJECT_NAME} src/main.cpp)
+add_executable(${PROJECT_NAME} src/main.cpp src/DIP.cpp)
 #set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} raylib)
 

@@ -6,7 +6,7 @@ Dynamical simulation and control of the unstable double inverted pendulum (DIP) 
 - [x] Make basic GUI for inputs
 - [x] Derive equations of motion
 - [x] Make cart in GUI with parameters
-- [ ] Implement dynamics (class for DIP)
+- [x] Implement dynamics (class for DIP)
 - [ ] Make cart move with dynamics
 - [ ] Add LQR control (class)
 
