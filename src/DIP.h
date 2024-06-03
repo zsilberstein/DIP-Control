@@ -29,7 +29,7 @@ class DIP {
      * @return Eigen::Vector<double, 6> The time derivative of the state
      */
     Eigen::Vector<double, 6> _getDerivative(
-        Eigen::Vector<double, 6> &currentState, double u);
+        const Eigen::Vector<double, 6> &currentState, double u);
 
     /**
      * @brief Performs 4th order Runge–Kutta integration with zero-order hold on
