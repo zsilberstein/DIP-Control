@@ -1,3 +1,12 @@
+/**
+ * @file DIP.h
+ * @author Zach Silberstein (zach.silberstein@gmail.com)
+ * @brief Class to represent a double inverted pendulum on a cart
+ * @date 2024-06-03
+ *
+ * @copyright Copyright (c) 2024
+ *
+ */
 #include "DIP.h"
 
 #include "Eigen/Dense"

@@ -12,6 +12,8 @@
 #include "raylib.h"
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
+#include "Eigen/Dense"
+#include "DIP.h"
 
 /**
  * 
@@ -36,6 +38,10 @@ int main(void) {
     const int screenWidth = 1600;
     const int screenHeight = 900;
     InitWindow(screenWidth, screenHeight, "DIP-Control");
+
+    const int FPS = 100;
+    SetTargetFPS(FPS); // Time between points in sim is 1/FPS
+    const double dt = 1.0 / FPS;
 
     // Set style
     GuiSetStyle(DEFAULT, TEXT_SIZE, 17);
@@ -72,7 +78,11 @@ int main(void) {
     // Start button value
     bool startBtn = false;
 
-    while (!WindowShouldClose()) {
+    // DIP object to be created and used later
+    DIP* dip = nullptr;
+
+    // Initialization loop
+    while (!startBtn && !WindowShouldClose()) {
 
         // Update postion of the DIP system
         cartPos = cartTrackCenter;  // While not started, cart stays at center
@@ -136,6 +146,84 @@ int main(void) {
 
         EndDrawing();
     }
+
+    // Create DIP object with inital values
+    if (!WindowShouldClose()) {
+        dip = new DIP(sliders[0].currValue, sliders[1].currValue,
+                 sliders[2].currValue, sliders[3].currValue,
+                 sliders[4].currValue, sliders[5].currValue,
+                 sliders[6].currValue, sliders[7].currValue, dt,
+                 Eigen::Vector<double, 6>{0, sliders[8].currValue,
+                                          sliders[9].currValue, 0, 0, 0});
+        
+    }
+    while (!WindowShouldClose()) {
+        // Update state of DIP
+        Eigen::Vector<double, 6> state = dip->updateState(0);
+
+        // Update postion of DIP in pixels
+        cartPos = {cartTrackCenter.x + ((float)state[0]) * meter,
+                   cartTrackCenter.y};
+        leftWheelPos = {cartPos.x, cartPos.y + cartDims.y};
+        rightWheelPos = {cartPos.x + cartDims.x, cartPos.y + cartDims.y};
+        massOnePos = {cartTrackCenter.x + meter * ((float)dip->getMassOnePos()[0]) +
+                            cartDims.x / 2.0f,
+                      cartTrackCenter.y - meter * ((float)dip->getMassOnePos()[1]) +
+                            cartDims.y / 2.0f};
+        massTwoPos = {cartTrackCenter.x + meter * ((float)dip->getMassTwoPos()[0]) +
+                            cartDims.x / 2.0f,
+                      cartTrackCenter.y - meter * ((float)dip->getMassTwoPos()[1]) +
+                            cartDims.y / 2.0f};
+
+        BeginDrawing();
+
+        ClearBackground(WHITE);
+
+        // Cart Track
+        DrawLineEx((Vector2){screenWidth * 0.05, screenHeight * 0.55},
+                   (Vector2){screenWidth * 0.7, screenHeight * 0.55}, 
+                   5,
+                   Fade(BLACK, 0.8f));
+        // Cart (Darker with increasing mass)
+        DrawRectangleV(cartPos, cartDims,
+                       Fade(BLUE, sliders[0].currValue / 20.0f + 0.5f));
+        // Left wheel
+        DrawCircleV(leftWheelPos, wheelRadius, Fade(RED, 0.95f));
+        // Right wheel
+        DrawCircleV(rightWheelPos, wheelRadius, Fade(RED, 0.95f));
+        // Link 1
+        DrawLineEx((Vector2){cartPos.x + cartDims.x / 2, cartPos.y + cartDims.y / 2},
+                    massOnePos, 10, Fade(BLACK, 0.9f));
+        // Link 2
+        DrawLineEx(massOnePos, massTwoPos, 10, Fade(BLACK, 0.9f));
+        // Mass 1 (Radius grows with mass)
+        DrawCircleV(massOnePos, (sqrt(sliders[1].currValue) + 1.0) * meter / 10, RED);
+        // Mass 2 (Radius grows with mass)
+        DrawCircleV(massTwoPos, (sqrt(sliders[2].currValue) + 1.0) * meter / 10, RED);
+
+        // Make GUI area on right quarter of window
+        DrawLine(screenWidth * 0.75, 0, screenWidth * 0.75, screenWidth,
+                 Fade(LIGHTGRAY, 0.6f));
+        DrawRectangle(screenWidth * 0.75, 0, screenWidth * 0.25, screenHeight,
+                      Fade(LIGHTGRAY, 0.3f));
+
+        // Add GUI sliders
+        for (size_t i = 0; i < std::size(sliders); ++i) {
+            GuiLabel((Rectangle){screenWidth * 0.775,
+                                 screenHeight * (0.07f + i * 0.06f), 1400, 24},
+                                 TextFormat(sliders[i].label, sliders[i].currValue));
+            GuiSliderBar((Rectangle){screenWidth * 0.775,
+                                     screenHeight * (0.09f + i * 0.06f),
+                                     screenWidth * 0.2, screenHeight * 0.025},
+                         NULL, NULL, &sliders[i].currValue, sliders[i].minValue,
+                         sliders[i].maxValue);
+        }
+
+        EndDrawing();
+    }
+
+    // Delete dip;
+    delete dip;
 
     CloseWindow();
 
