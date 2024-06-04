@@ -11,6 +11,7 @@
 
 #include "Eigen/Dense"
 
+
 DIP::DIP(double cartMass, double massOne, double massTwo, double linkOneLength,
          double linkTwoLength, double cartDamping, double thetaOneDamping,
          double thetaTwoDamping, double dt,
@@ -182,8 +183,8 @@ Eigen::Vector<double, 6> DIP::_Rk4(Eigen::Vector<double, 6> &prevState,
 Eigen::Vector<double, 6> DIP::updateState(double u) {
     _state = _Rk4(_state, u);
     // Convert angles to be within [-Pi, Pi]
-    _state[1] = std::fmod(_state[1] + M_PI, 2 * M_PI) - M_PI;
-    _state[2] = std::fmod(_state[2] + M_PI, 2 * M_PI) - M_PI;
+    _state[1] = remainder(_state[1], 2*M_PI);
+    _state[2] = remainder(_state[2], 2*M_PI);
     return _state;
 }
 
