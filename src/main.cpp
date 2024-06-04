@@ -81,6 +81,9 @@ int main(void) {
     // DIP object to be created and used later
     DIP* dip = nullptr;
 
+    // Time in sim
+    double time{0};
+
     // Initialization loop
     while (!startBtn && !WindowShouldClose()) {
 
@@ -161,6 +164,9 @@ int main(void) {
         // Update state of DIP
         Eigen::Vector<double, 6> state = dip->updateState(0);
 
+        // Update time
+        time += dt;
+
         // Update postion of DIP in pixels
         cartPos = {cartTrackCenter.x + ((float)state[0]) * meter,
                    cartTrackCenter.y};
@@ -178,6 +184,19 @@ int main(void) {
         BeginDrawing();
 
         ClearBackground(WHITE);
+
+        // Plot text
+        DrawText(TextFormat("Time: %.2fs", (float)time), screenWidth * 0.05f,
+                 screenHeight * 0.1f, 20, BLACK);
+        DrawText(TextFormat("Potential Energy: %.2fJ",
+                            (float)dip->getPotentialEnergy()),
+                 screenWidth * 0.05f, screenHeight * 0.125f, 20, BLACK);
+        DrawText(TextFormat("Kinetic Energy: %.2fJ", (float)dip->getKineticEnergy()),
+                 screenWidth * 0.05f, screenHeight * 0.15f, 20, BLACK);
+        DrawText(TextFormat("Total Energy: %.2fJ",
+                            (float)(dip->getKineticEnergy() +
+                                    dip->getPotentialEnergy())),
+                 screenWidth * 0.05f, screenHeight * 0.175f, 20, BLACK);
 
         // Cart Track
         DrawLineEx((Vector2){screenWidth * 0.05, screenHeight * 0.55},
