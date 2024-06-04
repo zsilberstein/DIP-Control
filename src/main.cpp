@@ -79,7 +79,7 @@ int main(void) {
                                {"Link 2 Angular Velocity: %.2f rads/s", 0.0f, -2.0f, 2.0f}};
 
     // Sliders to display the state (label, initial value, min value, max value)
-    GUISlider stateSliders[] = {{"Cart Position: %.2f rads", 0.0f, -screenWidth * 0.325 / meter, screenWidth * 0.325 / meter},
+    GUISlider stateSliders[] = {{"Cart Position: %.2f m", 0.0f, -screenWidth * 0.325 / meter, screenWidth * 0.325 / meter},
                                 {"Theta 1: %.2f rads", 0.0f, -M_PIf, M_PIf},
                                 {"Theta 2: %.2f rads", 0.0f, -M_PIf, M_PIf},
                                 {"Cart Velocity: %.2f m/s", 0.0f, -15.0f, 15.0f},
@@ -89,178 +89,225 @@ int main(void) {
     // Start button value
     bool startBtn = false;
 
+    // Pause/resume button value
+    bool pauseBtn = false;
+    // Text for pause/resume button
+    const char *btnText;
+
+    // Reset button value
+    bool resetBtn = false;
+
     // DIP object to be created and used later
     DIP* dip = nullptr;
 
     // Time in sim
     double time{0};
 
-    // Initialization loop
-    while (!startBtn && !WindowShouldClose()) {
-
-        // Update postion of the DIP system
-        cartPos = cartTrackCenter;  // While not started, cart stays at center
-        leftWheelPos = {cartPos.x, cartPos.y + cartDims.y};
-        rightWheelPos = {cartPos.x + cartDims.x, cartPos.y + cartDims.y};
-        massOnePos = {cartPos.x + meter * initSliders[3].currValue * sinf(initSliders[8].currValue) + cartDims.x / 2.0f,
-                      cartPos.y - meter * initSliders[3].currValue * cosf(initSliders[8].currValue) + cartDims.y / 2.0f};
-        massTwoPos = {massOnePos.x + meter * initSliders[4].currValue * sinf(initSliders[8].currValue + initSliders[9].currValue),
-                      massOnePos.y - meter * initSliders[4].currValue * cosf(initSliders[8].currValue +  initSliders[9].currValue)};
-
-        BeginDrawing();
-
-        ClearBackground(WHITE);
-
-        // Cart Track
-        DrawLineEx((Vector2){screenWidth * 0.05, screenHeight * 0.55},
-                   (Vector2){screenWidth * 0.7, screenHeight * 0.55}, 
-                   5,
-                   Fade(BLACK, 0.8f));
-        // Cart (Darker with increasing mass)
-        DrawRectangleV(cartPos, cartDims,
-                       Fade(BLUE, initSliders[0].currValue / 20.0f + 0.5f));
-        // Left wheel
-        DrawCircleV(leftWheelPos, wheelRadius, Fade(RED, 0.95f));
-        // Right wheel
-        DrawCircleV(rightWheelPos, wheelRadius, Fade(RED, 0.95f));
-        // Link 1
-        DrawLineEx((Vector2){cartPos.x + cartDims.x / 2, cartPos.y + cartDims.y / 2},
-                    massOnePos, 10, Fade(BLACK, 0.9f));
-        // Link 2
-        DrawLineEx(massOnePos, massTwoPos, 10, Fade(BLACK, 0.9f));
-        // Mass 1 (Radius grows with mass)
-        DrawCircleV(massOnePos, (sqrt(initSliders[1].currValue) + 1.0) * meter / 10, RED);
-        // Mass 2 (Radius grows with mass)
-        DrawCircleV(massTwoPos, (sqrt(initSliders[2].currValue) + 1.0) * meter / 10, RED);
-
-        // Make GUI area on right quarter of window
-        DrawLine(screenWidth * 0.75, 0, screenWidth * 0.75, screenWidth,
-                 Fade(LIGHTGRAY, 0.6f));
-        DrawRectangle(screenWidth * 0.75, 0, screenWidth * 0.25, screenHeight,
-                      Fade(LIGHTGRAY, 0.3f));
-
-        // Add GUI sliders
-        for (size_t i = 0; i < std::size(initSliders); ++i) {
-            GuiLabel((Rectangle){screenWidth * 0.775,
-                                 screenHeight * (0.07f + i * 0.06f), 1400, 24},
-                                 TextFormat(initSliders[i].label, initSliders[i].currValue));
-            GuiSliderBar((Rectangle){screenWidth * 0.775,
-                                     screenHeight * (0.09f + i * 0.06f),
-                                     screenWidth * 0.2, screenHeight * 0.025},
-                         NULL, NULL, &initSliders[i].currValue, initSliders[i].minValue,
-                         initSliders[i].maxValue);
-        }
-
-        // Add start button
-        if (GuiButton((Rectangle){screenWidth * 0.775, screenHeight * 0.85,
-                                  screenWidth * 0.2, screenHeight * 0.025},
-                       "Start")) {
-            startBtn = true;
-        }
-
-        EndDrawing();
-    }
-
-    // Create DIP object with inital values
-    if (!WindowShouldClose()) {
-        dip = new DIP(initSliders[0].currValue, initSliders[1].currValue,
-                      initSliders[2].currValue, initSliders[3].currValue,
-                      initSliders[4].currValue, initSliders[5].currValue,
-                      initSliders[6].currValue, initSliders[7].currValue, dt,
-                      Eigen::Vector<double, 6>{
-                          0, initSliders[8].currValue, initSliders[9].currValue,
-                          initSliders[10].currValue, initSliders[11].currValue,
-                          initSliders[12].currValue});
-    }
+    // Main loop consists of initialization loop and simulation loop
     while (!WindowShouldClose()) {
-        // Update state of DIP
-        Eigen::Vector<double, 6> state = dip->updateState(0);
+
+        // Initialization loop
+        while (!startBtn && !WindowShouldClose()) {
+
+            // Update postion of the DIP system
+            cartPos = cartTrackCenter;  // While not started, cart stays at center
+            leftWheelPos = {cartPos.x, cartPos.y + cartDims.y};
+            rightWheelPos = {cartPos.x + cartDims.x, cartPos.y + cartDims.y};
+            massOnePos = {cartPos.x + meter * initSliders[3].currValue * sinf(initSliders[8].currValue) + cartDims.x / 2.0f,
+                        cartPos.y - meter * initSliders[3].currValue * cosf(initSliders[8].currValue) + cartDims.y / 2.0f};
+            massTwoPos = {massOnePos.x + meter * initSliders[4].currValue * sinf(initSliders[8].currValue + initSliders[9].currValue),
+                        massOnePos.y - meter * initSliders[4].currValue * cosf(initSliders[8].currValue +  initSliders[9].currValue)};
+
+            BeginDrawing();
+
+            ClearBackground(WHITE);
+
+            // Cart Track
+            DrawLineEx((Vector2){screenWidth * 0.05, screenHeight * 0.55},
+                    (Vector2){screenWidth * 0.7, screenHeight * 0.55}, 
+                    5,
+                    Fade(BLACK, 0.8f));
+            // Cart (Darker with increasing mass)
+            DrawRectangleV(cartPos, cartDims,
+                        Fade(BLUE, initSliders[0].currValue / 20.0f + 0.5f));
+            // Left wheel
+            DrawCircleV(leftWheelPos, wheelRadius, Fade(RED, 0.95f));
+            // Right wheel
+            DrawCircleV(rightWheelPos, wheelRadius, Fade(RED, 0.95f));
+            // Link 1
+            DrawLineEx((Vector2){cartPos.x + cartDims.x / 2, cartPos.y + cartDims.y / 2},
+                        massOnePos, 10, Fade(BLACK, 0.9f));
+            // Link 2
+            DrawLineEx(massOnePos, massTwoPos, 10, Fade(BLACK, 0.9f));
+            // Mass 1 (Radius grows with mass)
+            DrawCircleV(massOnePos, (sqrt(initSliders[1].currValue) + 1.0) * meter / 10, RED);
+            // Mass 2 (Radius grows with mass)
+            DrawCircleV(massTwoPos, (sqrt(initSliders[2].currValue) + 1.0) * meter / 10, RED);
+
+            // Make GUI area on right quarter of window
+            DrawLine(screenWidth * 0.75, 0, screenWidth * 0.75, screenWidth,
+                    Fade(LIGHTGRAY, 0.6f));
+            DrawRectangle(screenWidth * 0.75, 0, screenWidth * 0.25, screenHeight,
+                        Fade(LIGHTGRAY, 0.3f));
+
+            // Add GUI sliders
+            for (size_t i = 0; i < std::size(initSliders); ++i) {
+                GuiLabel((Rectangle){screenWidth * 0.775,
+                                    screenHeight * (0.07f + i * 0.06f), 1400, 24},
+                                    TextFormat(initSliders[i].label, initSliders[i].currValue));
+                GuiSliderBar((Rectangle){screenWidth * 0.775,
+                                        screenHeight * (0.09f + i * 0.06f),
+                                        screenWidth * 0.2, screenHeight * 0.025},
+                            NULL, NULL, &initSliders[i].currValue, initSliders[i].minValue,
+                            initSliders[i].maxValue);
+            }
+
+            // Add start button
+            if (GuiButton((Rectangle){screenWidth * 0.775, screenHeight * 0.85,
+                                    screenWidth * 0.2, screenHeight * 0.025},
+                        "Start")) {
+                startBtn = true;
+            }
+
+            EndDrawing();
+        }
+
+        // Create DIP object with inital values
+        if (!WindowShouldClose()) {
+            dip = new DIP(initSliders[0].currValue, initSliders[1].currValue,
+                        initSliders[2].currValue, initSliders[3].currValue,
+                        initSliders[4].currValue, initSliders[5].currValue,
+                        initSliders[6].currValue, initSliders[7].currValue, dt,
+                        Eigen::Vector<double, 6>{
+                            0, initSliders[8].currValue, initSliders[9].currValue,
+                            initSliders[10].currValue, initSliders[11].currValue,
+                            initSliders[12].currValue});
+        }
+
+        // Simulation loop
+        while (!resetBtn && !WindowShouldClose()) {
+
+            // Do not update if paused
+            if (!pauseBtn) {
+
+                // Update state of DIP
+                Eigen::Vector<double, 6> state = dip->updateState(0);
+                
+
+                // Update state sliders
+                for (size_t i = 0; i < std::size(state); ++i) {
+                    stateSliders[i].currValue = state[i];
+                }
+
+                // Update time
+                time += dt;
+
+                // Update postion of DIP in pixels
+                cartPos = {cartTrackCenter.x + ((float)state[0]) * meter,
+                        cartTrackCenter.y};
+                leftWheelPos = {cartPos.x, cartPos.y + cartDims.y};
+                rightWheelPos = {cartPos.x + cartDims.x, cartPos.y + cartDims.y};
+                massOnePos = {cartTrackCenter.x + meter * ((float)dip->getMassOnePos()[0]) +
+                                    cartDims.x / 2.0f,
+                            cartTrackCenter.y - meter * ((float)dip->getMassOnePos()[1]) +
+                                    cartDims.y / 2.0f};
+                massTwoPos = {cartTrackCenter.x + meter * ((float)dip->getMassTwoPos()[0]) +
+                                    cartDims.x / 2.0f,
+                            cartTrackCenter.y - meter * ((float)dip->getMassTwoPos()[1]) +
+                                    cartDims.y / 2.0f};
+
+            }
+
+            BeginDrawing();
+
+            ClearBackground(WHITE);
+
+            // Plot text
+            DrawText(TextFormat("Time: %.2fs", (float)time), screenWidth * 0.05f,
+                    screenHeight * 0.1f, 20, BLACK);
+            DrawText(TextFormat("Potential Energy: %.2fJ",
+                                (float)dip->getPotentialEnergy()),
+                    screenWidth * 0.05f, screenHeight * 0.125f, 20, BLACK);
+            DrawText(TextFormat("Kinetic Energy: %.2fJ", (float)dip->getKineticEnergy()),
+                    screenWidth * 0.05f, screenHeight * 0.15f, 20, BLACK);
+            DrawText(TextFormat("Total Energy: %.2fJ",
+                                (float)(dip->getKineticEnergy() +
+                                        dip->getPotentialEnergy())),
+                    screenWidth * 0.05f, screenHeight * 0.175f, 20, BLACK);
+
+            // Cart Track
+            DrawLineEx((Vector2){screenWidth * 0.05, screenHeight * 0.55},
+                    (Vector2){screenWidth * 0.7, screenHeight * 0.55}, 
+                    5,
+                    Fade(BLACK, 0.8f));
+            // Cart (Darker with increasing mass)
+            DrawRectangleV(cartPos, cartDims,
+                        Fade(BLUE, initSliders[0].currValue / 20.0f + 0.5f));
+            // Left wheel
+            DrawCircleV(leftWheelPos, wheelRadius, Fade(RED, 0.95f));
+            // Right wheel
+            DrawCircleV(rightWheelPos, wheelRadius, Fade(RED, 0.95f));
+            // Link 1
+            DrawLineEx((Vector2){cartPos.x + cartDims.x / 2, cartPos.y + cartDims.y / 2},
+                        massOnePos, 10, Fade(BLACK, 0.9f));
+            // Link 2
+            DrawLineEx(massOnePos, massTwoPos, 10, Fade(BLACK, 0.9f));
+            // Mass 1 (Radius grows with mass)
+            DrawCircleV(massOnePos, (sqrt(initSliders[1].currValue) + 1.0) * meter / 10, RED);
+            // Mass 2 (Radius grows with mass)
+            DrawCircleV(massTwoPos, (sqrt(initSliders[2].currValue) + 1.0) * meter / 10, RED);
+
+            // Make GUI area on right quarter of window
+            DrawLine(screenWidth * 0.75, 0, screenWidth * 0.75, screenWidth,
+                    Fade(LIGHTGRAY, 0.6f));
+            DrawRectangle(screenWidth * 0.75, 0, screenWidth * 0.25, screenHeight,
+                        Fade(LIGHTGRAY, 0.3f));
+
+            // Lock GUI sliders as they are not meant to accept input, but to show state
+            GuiLock();
+            // Add GUI sliders
+            for (size_t i = 0; i < std::size(stateSliders); ++i) {
+                GuiLabel((Rectangle){screenWidth * 0.775,
+                                    screenHeight * (0.07f + i * 0.06f), 1400, 24},
+                                    TextFormat(stateSliders[i].label, stateSliders[i].currValue));
+                GuiSliderBar((Rectangle){screenWidth * 0.775,
+                                        screenHeight * (0.09f + i * 0.06f),
+                                        screenWidth * 0.2, screenHeight * 0.025},
+                            NULL, NULL, &stateSliders[i].currValue, stateSliders[i].minValue,
+                            stateSliders[i].maxValue);
+            }
+            GuiUnlock();
+
+            // Pause/resume button
+            if (pauseBtn)
+                btnText = "Resume";
+            else
+                btnText = "Pause";
+            if (GuiButton((Rectangle){screenWidth * 0.775, screenHeight * 0.43,
+                                    screenWidth * 0.25 * 0.8, screenHeight * 0.025},
+                        btnText)) {
+                pauseBtn = !pauseBtn;
+            }
+
+            // Reset button
+            if (GuiButton((Rectangle){screenWidth * 0.775, screenHeight * 0.47,
+                                    screenWidth * 0.25 * 0.8, screenHeight * 0.025},
+                        "Reset")) {
+                resetBtn = !resetBtn;
+            }
+
+            EndDrawing();
+        }
         
-
-        // Update state sliders
-        for (size_t i = 0; i < std::size(state); ++i) {
-            stateSliders[i].currValue = state[i];
+        // Reset button was pressed, reset buttons and time for next sim
+        if (resetBtn) {
+            resetBtn = false;
+            startBtn = false;
+            pauseBtn = false;
+            time = 0;
+            delete dip;
+            dip = nullptr;
         }
-
-        // Update time
-        time += dt;
-
-        // Update postion of DIP in pixels
-        cartPos = {cartTrackCenter.x + ((float)state[0]) * meter,
-                   cartTrackCenter.y};
-        leftWheelPos = {cartPos.x, cartPos.y + cartDims.y};
-        rightWheelPos = {cartPos.x + cartDims.x, cartPos.y + cartDims.y};
-        massOnePos = {cartTrackCenter.x + meter * ((float)dip->getMassOnePos()[0]) +
-                            cartDims.x / 2.0f,
-                      cartTrackCenter.y - meter * ((float)dip->getMassOnePos()[1]) +
-                            cartDims.y / 2.0f};
-        massTwoPos = {cartTrackCenter.x + meter * ((float)dip->getMassTwoPos()[0]) +
-                            cartDims.x / 2.0f,
-                      cartTrackCenter.y - meter * ((float)dip->getMassTwoPos()[1]) +
-                            cartDims.y / 2.0f};
-
-        BeginDrawing();
-
-        ClearBackground(WHITE);
-
-        // Plot text
-        DrawText(TextFormat("Time: %.2fs", (float)time), screenWidth * 0.05f,
-                 screenHeight * 0.1f, 20, BLACK);
-        DrawText(TextFormat("Potential Energy: %.2fJ",
-                            (float)dip->getPotentialEnergy()),
-                 screenWidth * 0.05f, screenHeight * 0.125f, 20, BLACK);
-        DrawText(TextFormat("Kinetic Energy: %.2fJ", (float)dip->getKineticEnergy()),
-                 screenWidth * 0.05f, screenHeight * 0.15f, 20, BLACK);
-        DrawText(TextFormat("Total Energy: %.2fJ",
-                            (float)(dip->getKineticEnergy() +
-                                    dip->getPotentialEnergy())),
-                 screenWidth * 0.05f, screenHeight * 0.175f, 20, BLACK);
-
-        // Cart Track
-        DrawLineEx((Vector2){screenWidth * 0.05, screenHeight * 0.55},
-                   (Vector2){screenWidth * 0.7, screenHeight * 0.55}, 
-                   5,
-                   Fade(BLACK, 0.8f));
-        // Cart (Darker with increasing mass)
-        DrawRectangleV(cartPos, cartDims,
-                       Fade(BLUE, initSliders[0].currValue / 20.0f + 0.5f));
-        // Left wheel
-        DrawCircleV(leftWheelPos, wheelRadius, Fade(RED, 0.95f));
-        // Right wheel
-        DrawCircleV(rightWheelPos, wheelRadius, Fade(RED, 0.95f));
-        // Link 1
-        DrawLineEx((Vector2){cartPos.x + cartDims.x / 2, cartPos.y + cartDims.y / 2},
-                    massOnePos, 10, Fade(BLACK, 0.9f));
-        // Link 2
-        DrawLineEx(massOnePos, massTwoPos, 10, Fade(BLACK, 0.9f));
-        // Mass 1 (Radius grows with mass)
-        DrawCircleV(massOnePos, (sqrt(initSliders[1].currValue) + 1.0) * meter / 10, RED);
-        // Mass 2 (Radius grows with mass)
-        DrawCircleV(massTwoPos, (sqrt(initSliders[2].currValue) + 1.0) * meter / 10, RED);
-
-        // Make GUI area on right quarter of window
-        DrawLine(screenWidth * 0.75, 0, screenWidth * 0.75, screenWidth,
-                 Fade(LIGHTGRAY, 0.6f));
-        DrawRectangle(screenWidth * 0.75, 0, screenWidth * 0.25, screenHeight,
-                      Fade(LIGHTGRAY, 0.3f));
-
-        GuiLock();
-
-        // Add GUI sliders
-        for (size_t i = 0; i < std::size(stateSliders); ++i) {
-            GuiLabel((Rectangle){screenWidth * 0.775,
-                                 screenHeight * (0.07f + i * 0.06f), 1400, 24},
-                                 TextFormat(stateSliders[i].label, stateSliders[i].currValue));
-            GuiSliderBar((Rectangle){screenWidth * 0.775,
-                                     screenHeight * (0.09f + i * 0.06f),
-                                     screenWidth * 0.2, screenHeight * 0.025},
-                         NULL, NULL, &stateSliders[i].currValue, stateSliders[i].minValue,
-                         stateSliders[i].maxValue);
-        }
-
-        GuiUnlock();
-
-        EndDrawing();
     }
 
     // Delete dip;
