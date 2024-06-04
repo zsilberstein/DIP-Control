@@ -1,5 +1,9 @@
 # DIP-Control
 Dynamical simulation and control of the unstable double inverted pendulum (DIP) on a cart.
+<p align="center">
+  <img src="https://github.com/zsilberstein/DIP-Control/blob/main/images/DIP_Dynamics.gif?raw=true" width="640" height="360"/>
+</p>
+
 ## To Do
 - [x] Init Repo
 - [x] Setup Raylib and CMake
@@ -7,7 +11,7 @@ Dynamical simulation and control of the unstable double inverted pendulum (DIP) 
 - [x] Derive equations of motion
 - [x] Make cart in GUI with parameters
 - [x] Implement dynamics (class for DIP)
-- [ ] Make cart move with dynamics
+- [x] Make cart move with dynamics
 - [ ] Add LQR control (class)
 
 
