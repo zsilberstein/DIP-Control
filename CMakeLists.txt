@@ -26,7 +26,7 @@ endif()
 
 
 # Our Project
-add_executable(${PROJECT_NAME} src/main.cpp src/DIP.cpp)
+add_executable(${PROJECT_NAME} src/main.cpp src/DIP.cpp src/LQR.cpp)
 #set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} raylib)
 
