@@ -14,6 +14,7 @@
 #include "raygui.h"
 #include "Eigen/Dense"
 #include "DIP.h"
+#include "LQR.h"
 
 /**
  * 
@@ -109,6 +110,9 @@ int main(void) {
 
     // DIP object to be created and used later
     DIP* dip = nullptr;
+
+    // LQR object to be created and used later
+    LQR* lqr = nullptr;
 
     // Time in sim
     double time{0};
@@ -210,6 +214,13 @@ int main(void) {
                             0, initSliders[8].currValue, initSliders[9].currValue,
                             initSliders[10].currValue, initSliders[11].currValue,
                             initSliders[12].currValue});
+
+            if (controlModeActive == CLQR) {
+                // Create LQR object, let Q and R be identity matrix for now
+                lqr = new LQR(dip->getAc(), dip->getBc(),
+                              Eigen::MatrixXd::Identity(6, 6),
+                              Eigen::MatrixXd::Identity(1, 1));
+            }
         }
 
         // Simulation loop
@@ -217,10 +228,15 @@ int main(void) {
 
             // Do not update if paused
             if (!pauseBtn) {
-
+                Eigen::Vector<double, 6> state;
                 // Update state of DIP
-                Eigen::Vector<double, 6> state = dip->updateState(0);
-                
+                if (controlModeActive == OPEN_LOOP) {
+                     state = dip->updateState(0);
+                }
+                else {
+                    // Update state with feedback force based on current state
+                    state = dip->updateState(lqr->getFeedbackControl(dip->getState())(0));
+                }                
 
                 // Update state sliders
                 for (size_t i = 0; i < std::size(state); ++i) {
@@ -347,6 +363,8 @@ int main(void) {
             time = 0;
             delete dip;
             dip = nullptr;
+            delete lqr;
+            lqr = nullptr;
         }
     }
 
