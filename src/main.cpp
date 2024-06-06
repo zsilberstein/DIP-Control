@@ -32,6 +32,12 @@ struct GUISlider {
     const float maxValue;
 };
 
+typedef enum
+{
+    OPEN_LOOP = 0,
+    CLQR
+} controlMode;
+
 int main(void) {
 
     // Set up window
@@ -94,6 +100,10 @@ int main(void) {
     // Text for pause/resume button
     const char *btnText;
 
+    // Dropdown menu vars
+    int controlModeActive = OPEN_LOOP;
+    bool controlModeEdit = false;
+
     // Reset button value
     bool resetBtn = false;
 
@@ -150,6 +160,11 @@ int main(void) {
             DrawRectangle(screenWidth * 0.75, 0, screenWidth * 0.25, screenHeight,
                         Fade(LIGHTGRAY, 0.3f));
 
+            // Lock GUI if editing dropdown menu
+            if (controlModeEdit) {
+                GuiLock();
+            }
+
             // Add GUI sliders
             for (size_t i = 0; i < std::size(initSliders); ++i) {
                 GuiLabel((Rectangle){screenWidth * 0.775,
@@ -168,6 +183,19 @@ int main(void) {
                         "Start")) {
                 startBtn = true;
             }
+
+            GuiUnlock();
+
+            // Control Mode
+            GuiLabel(
+                (Rectangle){screenWidth * 0.775, screenHeight * 0.01, 140, 24},
+                "Control Mode");
+            if (GuiDropdownBox(
+                    (Rectangle){screenWidth * 0.775, screenHeight * 0.03,
+                                screenWidth * 0.25 * 0.8, screenHeight * 0.025},
+                    "OPEN LOOP;LQR", &controlModeActive,
+                    controlModeEdit))
+                controlModeEdit = !controlModeEdit;
 
             EndDrawing();
         }
@@ -276,6 +304,18 @@ int main(void) {
                             NULL, NULL, &stateSliders[i].currValue, stateSliders[i].minValue,
                             stateSliders[i].maxValue);
             }
+
+            // Control Mode
+            GuiLabel(
+                (Rectangle){screenWidth * 0.775, screenHeight * 0.01, 140, 24},
+                "Control Mode");
+            if (GuiDropdownBox(
+                    (Rectangle){screenWidth * 0.775, screenHeight * 0.03,
+                                screenWidth * 0.25 * 0.8, screenHeight * 0.025},
+                    "OPEN LOOP;LQR", &controlModeActive,
+                    controlModeEdit))
+                controlModeEdit = !controlModeEdit;
+
             GuiUnlock();
 
             // Pause/resume button
