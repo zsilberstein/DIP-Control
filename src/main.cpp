@@ -36,7 +36,8 @@ struct GUISlider {
 typedef enum
 {
     OPEN_LOOP = 0,
-    CLQR
+    CLQR,
+    DLQR
 } controlMode;
 
 int main(void) {
@@ -116,6 +117,9 @@ int main(void) {
 
     // Time in sim
     double time{0};
+
+    // Store the state of the system
+    Eigen::Vector<double, 6> state;
 
     // Main loop consists of initialization loop and simulation loop
     while (!WindowShouldClose()) {
@@ -197,7 +201,7 @@ int main(void) {
             if (GuiDropdownBox(
                     (Rectangle){screenWidth * 0.775, screenHeight * 0.03,
                                 screenWidth * 0.25 * 0.8, screenHeight * 0.025},
-                    "OPEN LOOP;LQR", &controlModeActive,
+                    "Open Loop;Continuos LQR; Discrete LQR", &controlModeActive,
                     controlModeEdit))
                 controlModeEdit = !controlModeEdit;
 
@@ -215,11 +219,16 @@ int main(void) {
                             initSliders[10].currValue, initSliders[11].currValue,
                             initSliders[12].currValue});
 
+            // Create LQR object, let Q and R be identity matrix for now
             if (controlModeActive == CLQR) {
-                // Create LQR object, let Q and R be identity matrix for now
                 lqr = new LQR(dip->getAc(), dip->getBc(),
                               Eigen::MatrixXd::Identity(6, 6),
-                              Eigen::MatrixXd::Identity(1, 1));
+                              Eigen::MatrixXd::Identity(1, 1), true);
+            }
+            else if (controlModeActive == DLQR) {
+                lqr = new LQR(dip->getAd(), dip->getBd(),
+                              Eigen::MatrixXd::Identity(6, 6),
+                              Eigen::MatrixXd::Identity(1, 1), false);
             }
         }
 
@@ -228,7 +237,7 @@ int main(void) {
 
             // Do not update if paused
             if (!pauseBtn) {
-                Eigen::Vector<double, 6> state;
+                
                 // Update state of DIP
                 if (controlModeActive == OPEN_LOOP) {
                      state = dip->updateState(0);
@@ -328,7 +337,7 @@ int main(void) {
             if (GuiDropdownBox(
                     (Rectangle){screenWidth * 0.775, screenHeight * 0.03,
                                 screenWidth * 0.25 * 0.8, screenHeight * 0.025},
-                    "OPEN LOOP;LQR", &controlModeActive,
+                    "Open Loop;Continuos LQR; Discrete LQR", &controlModeActive,
                     controlModeEdit))
                 controlModeEdit = !controlModeEdit;
 
