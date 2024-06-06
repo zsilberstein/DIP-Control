@@ -29,7 +29,20 @@ class LQR {
      * @return Eigen::MatrixXd Returns the solution X (n by n) to the matrix
      * equation A.T*X + X*A − X*B*R^(−1)*B.T*X + Q = 0
      */
-    Eigen::MatrixXd solveCARE();
+    Eigen::MatrixXd _solveCARE();
+
+    /**
+     * @brief Solves the discrete algebraic riccati equation (DARE) with a
+     * structure-preserving doubling algorithm.
+     * @cite E. K.-W. Chu, H.-Y. Fan, W.-W. Lin & C.-S. Wang (2004)
+     * Structure-Preserving Algorithms for Periodic Discrete-Time Algebraic
+     * Riccati Equations, International Journal of Control, 77:8, 767-788,
+     * DOI: 10.1080/00207170410001714988
+     *
+     * @return Eigen::MatrixXd Returns the solution X (n by n) to the matrix
+     * equation A.T*X*A − X − (A.T*X*B)(B.T*X*B+R)^(-1)*(B.T*X*A) + Q = 0
+     */
+    Eigen::MatrixXd _solveDARE();
 
     // State matrix (n by n)
     const Eigen::MatrixXd &_A;
@@ -42,9 +55,9 @@ class LQR {
     // Optimal gain (m by n)
     Eigen::MatrixXd _K;
     // Number of states
-    const int n;
+    const int _n;
     // Number of inputs
-    const int m;
+    const int _m;
 
    public:
     /**
@@ -54,9 +67,11 @@ class LQR {
      * @param B Input matrix (n by m)
      * @param Q State cost matrix (n by n)
      * @param R Input cost matrix (m by m)
+     * @param continuous true for a continuous system, false for a discrete
+     * system
      */
     LQR(Eigen::MatrixXd A, Eigen::MatrixXd B, Eigen::MatrixXd Q,
-        Eigen::MatrixXd R);
+        Eigen::MatrixXd R, bool continuous);
 
     /**
      * @brief Get the LQR state-feedback control u (m by 1).
