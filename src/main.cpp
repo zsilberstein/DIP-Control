@@ -3,7 +3,7 @@
  * @author Zach Silberstein (zach.silberstein@gmail.com)
  * @brief Dynamical simulation and control of the unstable double inverted
  * pendulum (DIP) on a cart.
- * @date 2024-05-31
+ * @date 2024-06-08
  *
  * @copyright Copyright (c) 2024
  *
@@ -77,14 +77,15 @@ int main(void) {
                                {"Mass 2: %.2f kgs", 1.0f, 0.5f, 5.0f},
                                {"Length 1: %.2f m", 1.0f, 0.1f, 2.5f},
                                {"Length 2: %.2f m", 1.0f, 0.1f, 2.5f},
-                               {"Cart Damping: %.2f Ns/m", 0.0f, 0.0f, 5.0f},
-                               {"Theta 1 Damping: %.2f Nms/rad", 0.0f, 0.0f, 3.0f},
-                               {"Theta 2 Damping: %.2f Nms/rad", 0.0f, 0.0f, 3.0f},
+                               {"Cart Damping: %.2f Ns/m", 0.0f, 0.0f, 2.5f},
+                               {"Theta 1 Damping: %.2f Nms/rad", 0.0f, 0.0f, 0.5f},
+                               {"Theta 2 Damping: %.2f Nms/rad", 0.0f, 0.0f, 0.5f},
                                {"Theta 1: %.2f rads", 0.0f, -M_PIf, M_PIf},
                                {"Theta 2: %.2f rads", 0.0f, -M_PIf, M_PIf},
                                {"Cart Velocity: %.2f m/s", 0.0f, -2.0f, 2.0f},
                                {"Link 1 Angular Velocity: %.2f rads/s", 0.0f, -1.0f, 1.0f},
-                               {"Link 2 Angular Velocity: %.2f rads/s", 0.0f, -2.0f, 2.0f}};
+                               {"Link 2 Angular Velocity: %.2f rads/s", 0.0f, -2.0f, 2.0f},
+                               {"Final Cart Position: %.2f m", 0.0f, -screenWidth * 0.325 / meter, screenWidth * 0.325 / meter}};
 
     // Sliders to display the state (label, initial value, min value, max value)
     GUISlider stateSliders[] = {{"Cart Position: %.2f m", 0.0f, -screenWidth * 0.325 / meter, screenWidth * 0.325 / meter},
@@ -126,6 +127,9 @@ int main(void) {
 
     // Store the state of the system
     Eigen::Vector<double, 6> state;
+
+    // Desired final state of the system
+    Eigen::Vector<double, 6> finalState;
 
     // Main loop consists of initialization loop and simulation loop
     while (!WindowShouldClose()) {
@@ -191,6 +195,18 @@ int main(void) {
                             initSliders[i].maxValue);
             }
 
+            // Add slider for final position
+            if (controlModeActive != OPEN_LOOP) {
+                GuiLabel((Rectangle){screenWidth * 0.775,
+                                    screenHeight * (0.67f), 1400, 24},
+                                    TextFormat(initSliders[13].label, initSliders[13].currValue));
+                GuiSliderBar((Rectangle){screenWidth * 0.775,
+                                        screenHeight * (0.69f),
+                                        screenWidth * 0.2, screenHeight * 0.025},
+                            NULL, NULL, &initSliders[13].currValue, initSliders[13].minValue,
+                            initSliders[13].maxValue);
+            }
+
             // Add start button
             if (GuiButton((Rectangle){screenWidth * 0.775, startBtnHeight,
                                     screenWidth * 0.2, screenHeight * 0.025},
@@ -226,7 +242,7 @@ int main(void) {
                             initSliders[8].maxValue = M_PIf / 20;
                             initSliders[9].maxValue = M_PIf / 20;
                             numSliders = 10;
-                            startBtnHeight = screenHeight * 0.67f;
+                            startBtnHeight = screenHeight * 0.73f;
                         }
                     }
 
@@ -255,6 +271,9 @@ int main(void) {
                               Eigen::MatrixXd::Identity(6, 6),
                               Eigen::MatrixXd::Identity(1, 1), false);
             }
+
+            // Apply desired final position
+            finalState = {initSliders[13].currValue, 0, 0, 0, 0, 0};
         }
 
         // Simulation loop
@@ -269,7 +288,7 @@ int main(void) {
                 }
                 else {
                     // Update state with feedback force based on current state
-                    state = dip->updateState(lqr->getFeedbackControl(dip->getState())(0));
+                    state = dip->updateState(lqr->getFeedbackControl(dip->getState()-finalState)(0));
                 }                
 
                 // Update state sliders
@@ -302,16 +321,16 @@ int main(void) {
 
             // Plot text
             DrawText(TextFormat("Time: %.2fs", (float)time), screenWidth * 0.05f,
-                    screenHeight * 0.1f, 20, BLACK);
+                    screenHeight * 0.05f, 20, BLACK);
             DrawText(TextFormat("Potential Energy: %.2fJ",
                                 (float)dip->getPotentialEnergy()),
-                    screenWidth * 0.05f, screenHeight * 0.125f, 20, BLACK);
+                    screenWidth * 0.05f, screenHeight * 0.075f, 20, BLACK);
             DrawText(TextFormat("Kinetic Energy: %.2fJ", (float)dip->getKineticEnergy()),
-                    screenWidth * 0.05f, screenHeight * 0.15f, 20, BLACK);
+                    screenWidth * 0.05f, screenHeight * 0.10f, 20, BLACK);
             DrawText(TextFormat("Total Energy: %.2fJ",
                                 (float)(dip->getKineticEnergy() +
                                         dip->getPotentialEnergy())),
-                    screenWidth * 0.05f, screenHeight * 0.175f, 20, BLACK);
+                    screenWidth * 0.05f, screenHeight * 0.125f, 20, BLACK);
 
             // Cart Track
             DrawLineEx((Vector2){screenWidth * 0.05, screenHeight * 0.55},
