@@ -29,8 +29,8 @@
 struct GUISlider {
     const char *label;
     float currValue;
-    const float minValue;
-    const float maxValue;
+    float minValue;
+    float maxValue;
 };
 
 typedef enum
@@ -94,6 +94,12 @@ int main(void) {
                                 {"Link 1 Angular Velocity: %.2f rads/s", 0.0f, -25.0f, 25.0f},
                                 {"Link 2 Angular Velocity: %.2f rads/s", 0.0f, -25.0f, 25.0f}};
 
+    // Number of sliders to show, changes with control mode
+    size_t numSliders = 13;
+
+    // Location of start button, changes with control mode
+    float startBtnHeight = screenHeight * 0.85;
+    
     // Start button value
     bool startBtn = false;
 
@@ -174,7 +180,7 @@ int main(void) {
             }
 
             // Add GUI sliders
-            for (size_t i = 0; i < std::size(initSliders); ++i) {
+            for (size_t i = 0; i < numSliders; ++i) {
                 GuiLabel((Rectangle){screenWidth * 0.775,
                                     screenHeight * (0.07f + i * 0.06f), 1400, 24},
                                     TextFormat(initSliders[i].label, initSliders[i].currValue));
@@ -186,7 +192,7 @@ int main(void) {
             }
 
             // Add start button
-            if (GuiButton((Rectangle){screenWidth * 0.775, screenHeight * 0.85,
+            if (GuiButton((Rectangle){screenWidth * 0.775, startBtnHeight,
                                     screenWidth * 0.2, screenHeight * 0.025},
                         "Start")) {
                 startBtn = true;
@@ -194,7 +200,7 @@ int main(void) {
 
             GuiUnlock();
 
-            // Control Mode
+            // Control mode Dropdown
             GuiLabel(
                 (Rectangle){screenWidth * 0.775, screenHeight * 0.01, 140, 24},
                 "Control Mode");
@@ -202,8 +208,27 @@ int main(void) {
                     (Rectangle){screenWidth * 0.775, screenHeight * 0.03,
                                 screenWidth * 0.25 * 0.8, screenHeight * 0.025},
                     "Open Loop;Continuos LQR; Discrete LQR", &controlModeActive,
-                    controlModeEdit))
-                controlModeEdit = !controlModeEdit;
+                    controlModeEdit)) {
+                        controlModeEdit = !controlModeEdit;
+                        if (controlModeActive == OPEN_LOOP) {
+                            initSliders[8].minValue = -M_PIf;
+                            initSliders[9].minValue = -M_PIf;
+                            initSliders[8].maxValue = M_PIf;
+                            initSliders[9].maxValue = M_PIf;
+                            numSliders = 13;
+                            startBtnHeight = screenHeight * 0.85;
+                        }
+                        else {
+                            // Limit angles to be within small angle
+                            // approximation when in control mode
+                            initSliders[8].minValue = -M_PIf / 20;
+                            initSliders[9].minValue = -M_PIf / 20;
+                            initSliders[8].maxValue = M_PIf / 20;
+                            initSliders[9].maxValue = M_PIf / 20;
+                            numSliders = 10;
+                            startBtnHeight = screenHeight * 0.67f;
+                        }
+                    }
 
             EndDrawing();
         }
