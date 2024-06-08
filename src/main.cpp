@@ -251,14 +251,20 @@ int main(void) {
 
         // Create DIP object with inital values
         if (!WindowShouldClose()) {
+            Eigen::Vector<double, 6> initState;
+            if (controlModeActive == OPEN_LOOP) {
+                initState = {0, initSliders[8].currValue, initSliders[9].currValue,
+                            initSliders[10].currValue, initSliders[11].currValue,
+                            initSliders[12].currValue};
+            }
+            else {
+                state = {0, initSliders[8].currValue, initSliders[9].currValue, 0, 0, 0};
+            }
             dip = new DIP(initSliders[0].currValue, initSliders[1].currValue,
                         initSliders[2].currValue, initSliders[3].currValue,
                         initSliders[4].currValue, initSliders[5].currValue,
                         initSliders[6].currValue, initSliders[7].currValue, dt,
-                        Eigen::Vector<double, 6>{
-                            0, initSliders[8].currValue, initSliders[9].currValue,
-                            initSliders[10].currValue, initSliders[11].currValue,
-                            initSliders[12].currValue});
+                        initState);
 
             // Create LQR object, let Q and R be identity matrix for now
             if (controlModeActive == CLQR) {
