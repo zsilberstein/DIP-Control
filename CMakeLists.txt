@@ -1,11 +1,15 @@
 cmake_minimum_required(VERSION 3.22)
 project(DIP-Control)
 set (CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Fix warning in raylib-src/src/CMakeLists.txt:14
+set(CMAKE_BUILD_TYPE Debug)
 
 # Generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Dependencies
+# Get raylib if not found
 set(RAYLIB_VERSION 5.0)
 find_package(raylib ${RAYLIB_VERSION} QUIET) # QUIET or REQUIRED
 if (NOT raylib_FOUND) # If there's none, fetch and build raylib
@@ -24,10 +28,21 @@ if (NOT raylib_FOUND) # If there's none, fetch and build raylib
   endif()
 endif()
 
+# Get GoogleTest if not found
+find_package(googletest QUIET)
+if (NOT googletest_FOUND)
+  FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+  )
+  # For Windows: Prevent overriding the parent project's compiler/linker settings
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  FetchContent_MakeAvailable(googletest)
+endif()
 
-# Our Project
+
+# Build project
 add_executable(${PROJECT_NAME} src/main.cpp src/DIP.cpp src/LQR.cpp)
-#set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} raylib)
 
 # Checks if OSX and links appropriate frameworks (Only required on MacOS)
@@ -36,3 +51,4 @@ if (APPLE)
     target_link_libraries(${PROJECT_NAME} "-framework Cocoa")
     target_link_libraries(${PROJECT_NAME} "-framework OpenGL")
 endif()
+
