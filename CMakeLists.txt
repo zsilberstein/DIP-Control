@@ -52,3 +52,12 @@ if (APPLE)
     target_link_libraries(${PROJECT_NAME} "-framework OpenGL")
 endif()
 
+# Set up tests
+enable_testing()
+
+# Build tests
+add_executable(${PROJECT_NAME}-test test/DIP_test.cpp src/DIP)
+target_link_libraries(${PROJECT_NAME}-test GTest::gtest_main)
+
+include(GoogleTest)
+gtest_discover_tests(${PROJECT_NAME}-test)
