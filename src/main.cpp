@@ -258,7 +258,7 @@ int main(void) {
                             initSliders[12].currValue};
             }
             else {
-                state = {0, initSliders[8].currValue, initSliders[9].currValue, 0, 0, 0};
+                initState = {0, initSliders[8].currValue, initSliders[9].currValue, 0, 0, 0};
             }
             dip = new DIP(initSliders[0].currValue, initSliders[1].currValue,
                         initSliders[2].currValue, initSliders[3].currValue,
