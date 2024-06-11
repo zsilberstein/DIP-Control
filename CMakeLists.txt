@@ -56,7 +56,7 @@ endif()
 enable_testing()
 
 # Build tests
-add_executable(${PROJECT_NAME}-test test/DIP_test.cpp src/DIP)
+add_executable(${PROJECT_NAME}-test test/DIP_test.cpp src/DIP test/LQR_test.cpp src/LQR.cpp)
 target_link_libraries(${PROJECT_NAME}-test GTest::gtest_main)
 
 include(GoogleTest)
