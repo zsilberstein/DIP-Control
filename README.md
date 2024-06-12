@@ -11,7 +11,7 @@ Dynamical simulation and control of the unstable double inverted pendulum (DIP) 
 - Continuous and Discrete LQR control of system
 
 ## Dependencies
-In addition to C++ 20 and a c++ complier, this project depends on the following:
+All dependencies in this project work on Linux, macOS, and Windows. In addition to C++ 20 and a c++ complier, this project depends on the following:
 - [CMake](https://cmake.org/) - The build system used for this project. See [here](https://cmake.org/download/) for getting started with CMake.
 - [raylib](https://www.raylib.com/index.html) - A library built on GLFW for video game programming. If not already installed, the CMakeLists.txt file will install it for you.
 - [raygui](https://github.com/raysan5/raygui) - A header only file to help design simple GUIs. This file is already included in the /src directory. 
@@ -20,6 +20,7 @@ In addition to C++ 20 and a c++ complier, this project depends on the following:
 
 
 ## Installation
+The following instructions are designed for Linux. Instructions for other operating systems may slightly vary.
 Clone this project with git:
 ```
 git clone https://github.com/zsilberstein/DIP-Control.git
