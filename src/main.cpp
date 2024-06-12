@@ -9,6 +9,7 @@
  *
  */
 #include <iostream>
+#include <numbers>
 #include "raylib.h"
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
@@ -80,8 +81,8 @@ int main(void) {
                                {"Cart Damping: %.2f Ns/m", 0.0f, 0.0f, 2.5f},
                                {"Theta 1 Damping: %.2f Nms/rad", 0.0f, 0.0f, 0.5f},
                                {"Theta 2 Damping: %.2f Nms/rad", 0.0f, 0.0f, 0.5f},
-                               {"Theta 1: %.2f rads", 0.0f, -M_PIf, M_PIf},
-                               {"Theta 2: %.2f rads", 0.0f, -M_PIf, M_PIf},
+                               {"Theta 1: %.2f rads", 0.0f, -std::numbers::pi_v<float>, std::numbers::pi_v<float>},
+                               {"Theta 2: %.2f rads", 0.0f, -std::numbers::pi_v<float>, std::numbers::pi_v<float>},
                                {"Cart Velocity: %.2f m/s", 0.0f, -2.0f, 2.0f},
                                {"Link 1 Angular Velocity: %.2f rads/s", 0.0f, -1.0f, 1.0f},
                                {"Link 2 Angular Velocity: %.2f rads/s", 0.0f, -2.0f, 2.0f},
@@ -89,8 +90,8 @@ int main(void) {
 
     // Sliders to display the state (label, initial value, min value, max value)
     GUISlider stateSliders[] = {{"Cart Position: %.2f m", 0.0f, -screenWidth * 0.325 / meter, screenWidth * 0.325 / meter},
-                                {"Theta 1: %.2f rads", 0.0f, -M_PIf, M_PIf},
-                                {"Theta 2: %.2f rads", 0.0f, -M_PIf, M_PIf},
+                                {"Theta 1: %.2f rads", 0.0f, -std::numbers::pi_v<float>, std::numbers::pi_v<float>},
+                                {"Theta 2: %.2f rads", 0.0f, -std::numbers::pi_v<float>, std::numbers::pi_v<float>},
                                 {"Cart Velocity: %.2f m/s", 0.0f, -15.0f, 15.0f},
                                 {"Link 1 Angular Velocity: %.2f rads/s", 0.0f, -25.0f, 25.0f},
                                 {"Link 2 Angular Velocity: %.2f rads/s", 0.0f, -25.0f, 25.0f}};
@@ -227,20 +228,20 @@ int main(void) {
                     controlModeEdit)) {
                         controlModeEdit = !controlModeEdit;
                         if (controlModeActive == OPEN_LOOP) {
-                            initSliders[8].minValue = -M_PIf;
-                            initSliders[9].minValue = -M_PIf;
-                            initSliders[8].maxValue = M_PIf;
-                            initSliders[9].maxValue = M_PIf;
+                            initSliders[8].minValue = -std::numbers::pi_v<float>;
+                            initSliders[9].minValue = -std::numbers::pi_v<float>;
+                            initSliders[8].maxValue = std::numbers::pi_v<float>;
+                            initSliders[9].maxValue = std::numbers::pi_v<float>;
                             numSliders = 13;
                             startBtnHeight = screenHeight * 0.85;
                         }
                         else {
                             // Limit angles to be within small angle
                             // approximation when in control mode
-                            initSliders[8].minValue = -M_PIf / 20;
-                            initSliders[9].minValue = -M_PIf / 20;
-                            initSliders[8].maxValue = M_PIf / 20;
-                            initSliders[9].maxValue = M_PIf / 20;
+                            initSliders[8].minValue = -std::numbers::pi_v<float> / 20;
+                            initSliders[9].minValue = -std::numbers::pi_v<float> / 20;
+                            initSliders[8].maxValue = std::numbers::pi_v<float> / 20;
+                            initSliders[9].maxValue = std::numbers::pi_v<float> / 20;
                             numSliders = 10;
                             startBtnHeight = screenHeight * 0.73f;
                         }

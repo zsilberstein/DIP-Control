@@ -8,7 +8,7 @@
  *
  */
 #include "DIP.h"
-
+#include <numbers>
 #include "Eigen/Dense"
 
 
@@ -183,8 +183,8 @@ Eigen::Vector<double, 6> DIP::_Rk4(Eigen::Vector<double, 6> &prevState,
 Eigen::Vector<double, 6> DIP::updateState(double u) {
     _state = _Rk4(_state, u);
     // Convert angles to be within [-Pi, Pi]
-    _state[1] = remainder(_state[1], 2*M_PI);
-    _state[2] = remainder(_state[2], 2*M_PI);
+    _state[1] = remainder(_state[1], 2*std::numbers::pi);
+    _state[2] = remainder(_state[2], 2*std::numbers::pi);
     return _state;
 }
 
